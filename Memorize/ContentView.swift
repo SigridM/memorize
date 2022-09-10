@@ -163,7 +163,7 @@ struct ContentView: View {
         .alert(
             ViewConstants.alertMessage,
             isPresented: $needsAlert,
-            actions: buttonActionsFor(game.reset())
+            actions: buttonActionsFor({game.reset()})
             )
 //            {
 //                Button(role: .destructive) {
@@ -190,19 +190,18 @@ struct ContentView: View {
         Button{game.increaseCards()} label: {ViewConstants.addImage}
     }
 
-    private func buttonActionsFor(_ action: ()->Void) -> @ViewBuilder () -> Button<Text> {
-        {
+    @ViewBuilder private func buttonActionsFor(_ action: ()->Void) -> () -> some View {
+      {
             Button(role: .destructive) {
-                action()
-            } label: {
-                Text("Yes")
-            }
-            Button(role: .cancel) { }// do nothing
-            label: {
-                Text("No")
-            }
+            action()
+        } label: {
+            Text("Yes")
         }
-        
+        Button(role: .cancel) { }// do nothing
+        label: {
+            Text("No")
+        }
+      }
     }
 
     private func scrollView(withGeometry scrollViewGeometryProxy: GeometryProxy) -> some View {
