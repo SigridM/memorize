@@ -27,9 +27,12 @@ struct ViewConstants {
     /// A Boolean, true if we are currently printing a lot of diagnostics about the card width calculations to the console
     static let debuggingCardWidth = false
     
-    /// The String message to show if we pop up an alert dialog
-    static let alertMessage = "Game is not over. Are you sure?"
+    /// The String message to show if we need to pop up an alert dialog on reset
+    static let resetAlertMessage = "Game is not over. Are you sure you want to reset?"
     
+    /// The String message to show if we need to pop up an alert dialog on new game
+    static let newGameAlertMessage = "Game is not over. Are you sure you want a new game?"
+
     static let addImage = Image(systemName: "plus.circle")
     
     static let removeImage = Image(systemName: "minus.circle")
@@ -49,7 +52,8 @@ struct ContentView: View {
     @ObservedObject var game: EmojiMemoryGame
     
     /// A Boolean State, true if when a user clicks on a button, we need to show an alert
-    @State var needsAlert: Bool = false
+    @State var needsResetAlert: Bool = false
+    @State var needsNewGameAlert: Bool = false
 
     // MARK: - body
     /// A View of the entire layout of the UI, including the title, the theme, the score, all of the cards (sized so they fit
@@ -121,27 +125,19 @@ struct ContentView: View {
                 .font(.caption)
         }
         .onTapGesture {
-            needsAlert = game.isBegun() && !game.isOver()
-            if !needsAlert {
+            needsNewGameAlert = game.isBegun() && !game.isOver()
+            if !needsNewGameAlert {
                 game.newRandomGame()
             }
         }
+
         .alert(
-            ViewConstants.alertMessage,
-            isPresented: $needsAlert)
-            {
-                Button(role: .destructive) {
-                    game.newRandomGame()
-                } label: {
-                    Text("Yes")
-                }
-                Button(role: .cancel) { }// do nothing
-                label: {
-                    Text("No")
-                }
-            }
-          .foregroundColor(.blue)
-          .padding(.horizontal)
+            ViewConstants.newGameAlertMessage,
+            isPresented: $needsNewGameAlert,
+            actions: {alertActionsFor(game.newRandomGame)}
+            )
+        .foregroundColor(.blue)
+        .padding(.horizontal)
     }
     
     /// Creates and returns a UI element that, when selected, initiates a new game with the same theme as the current
@@ -154,32 +150,32 @@ struct ContentView: View {
                 .font(.caption)
         }
         .onTapGesture {
-            needsAlert = game.isBegun() && !game.isOver()
-            if !needsAlert {
+            needsResetAlert = game.isBegun() && !game.isOver()
+            if !needsResetAlert {
                 game.reset()
             }
         }
-//        .alert(<#T##titleKey: LocalizedStringKey##LocalizedStringKey#>, isPresented: <#T##Binding<Bool>#>, actions: <#T##() -> View#>)
         .alert(
-            ViewConstants.alertMessage,
-            isPresented: $needsAlert,
-            actions: buttonActionsFor({game.reset()})
-            )
-//            {
-//                Button(role: .destructive) {
-//                    game.reset()
-//                } label: {
-//                    Text("Yes")
-//                }
-//                Button(role: .cancel) { }// do nothing
-//                label: {
-//                    Text("No")
-//                }
-//            }
-          .foregroundColor(.blue)
-          .padding(.horizontal)
+            ViewConstants.resetAlertMessage,
+            isPresented: $needsResetAlert) {
+                alertActionsFor(game.reset)
+            }
+        .foregroundColor(.blue)
+        .padding(.horizontal)
     }
-    
+
+    @ViewBuilder private func alertActionsFor(_ yesAction: @escaping ()-> Void) ->some View {
+        Button(role: .destructive) {
+            yesAction()
+        } label: {
+            Text("Yes")
+        }
+        Button(role: .cancel) { }// do nothing
+        label: {
+            Text("No")
+        }
+    }
+
     /// A UI element for removing a card
     private var cardRemover: some View {
         Button {game.decreaseCards()} label: {ViewConstants.removeImage}
@@ -188,20 +184,6 @@ struct ContentView: View {
     /// A UI element for adding a card
     private var cardAdder: some View {
         Button{game.increaseCards()} label: {ViewConstants.addImage}
-    }
-
-    @ViewBuilder private func buttonActionsFor(_ action: ()->Void) -> () -> some View {
-      {
-            Button(role: .destructive) {
-            action()
-        } label: {
-            Text("Yes")
-        }
-        Button(role: .cancel) { }// do nothing
-        label: {
-            Text("No")
-        }
-      }
     }
 
     private func scrollView(withGeometry scrollViewGeometryProxy: GeometryProxy) -> some View {
