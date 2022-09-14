@@ -217,13 +217,11 @@ class EmojiMemoryGame: ObservableObject {
     
     /// Creates a new game with the same theme as the current theme
     func reset() {
-        print("In reset")
         self.changeTo(themeNumbered: EmojiMemoryGame.currentThemeIndex)
     }
     
     /// Creates a new game with a random theme
     func newRandomGame() {
-        print("In newRandomGame")
         self.changeTo(themeNumbered: EmojiMemoryGame.randomThemeIndex())
     }
     
