@@ -373,9 +373,6 @@ struct ContentView: View {
                 // And... it seems like I don't have to subtract the borderAllowance, just
                 // half of that: the cardBorderWidth. Go figure.
                 let answer = columnWidth - ViewConstants.cardBorderWidth
-//                print (ViewConstants.defaultCornerRadius / currentCardWidth)
-//                print("In cardWidthFor loop: \(cornerRadius(basedOn: answer))", terminator: "")
-//                print(" Actual: \(game.currentCornerRadius)")
                 return answer
             }
             columnNumber += 1
@@ -384,8 +381,6 @@ struct ContentView: View {
         // fell out of bottom of the loop without returning a width...
         debugPrinter.constrainByHeight()
         let answer = borderViewHeight * ViewConstants.cardAspectRatio
-//        print("In cardWidthFor fallout: \(cornerRadius(basedOn: answer))", terminator: "")
-//        print(" Actual: \(game.currentCornerRadius)")
         return answer
     }
     
@@ -625,7 +620,7 @@ struct CardView: View {
             }
         }
     }
-} // end CardView
+} // end CardView struct
 
 /// Allows previews to be shown in the development environment in various color schemes and orientations
 struct ContentView_Previews: PreviewProvider {
