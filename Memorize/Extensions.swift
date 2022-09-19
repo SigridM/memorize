@@ -21,7 +21,7 @@ extension Int {
     }
 }
 
-extension Array where Element: Any {
+extension Array {
     /// Looks through the array to ascertain if no elements pass the given test
     /// - Parameter test: a closure taking one element and returning a Boolean: true if that element passes the test
     /// - Returns: a Boolean: true if no elements pass the test (i.e., if all elements fail the test); false if even one element passes
@@ -44,5 +44,10 @@ extension Array where Element: Any {
             }
         }
         return false // got all the way through and none satisfied the test
+    }
+    
+    public var oneAndOnly: Element? {
+        if count == 1 {return first}
+        return nil
     }
 }

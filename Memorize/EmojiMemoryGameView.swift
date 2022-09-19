@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  EmojiMemoryGameView.swift
 //  Memorize
 //
 //  Created by Sigrid Mortensen on 8/12/22.
@@ -27,19 +27,16 @@ struct ViewConstants {
     /// A Boolean, true if we are currently printing a lot of diagnostics about the card width calculations to the console
     static let debuggingCardWidth = false
     
+    /// The String that is the common part of the alert message
+    static let alertMessageBase = "Game is not over. Are you sure you want "
     /// The String message to show if we need to pop up an alert dialog on reset
-    static let resetAlertMessage = "Game is not over. Are you sure you want to reset?"
-    
+    static let resetAlertMessage = alertMessageBase + "to reset?"
     /// The String message to show if we need to pop up an alert dialog on new game
-    static let newGameAlertMessage = "Game is not over. Are you sure you want a new game?"
-    
+    static let newGameAlertMessage = alertMessageBase + "a new game?"
     /// The String message to show if we need to pop up an alert dialog when decreasing the cards
-    static let removeCardsAlertMessage = "Game is not over. " +
-    "Are you sure you want a new game with fewer cards?"
-    
+    static let removeCardsAlertMessage = alertMessageBase + "a new game with fewer cards?"
     /// The String message to show if we need to pop up an alert dialog when decreasing the cards
-    static let addCardsAlertMessage = "Game is not over. " +
-    "Are you sure you want a new game with more cards?"
+    static let addCardsAlertMessage = alertMessageBase + "a new game with more cards?"
     
     /// The following four images are the system images for the given buttons
     static let addImage = Image(systemName: "plus.circle")
@@ -53,7 +50,7 @@ struct ViewConstants {
 } // end ViewConstants
 
 /// A View composing the entire UI of the App
-struct ContentView: View {
+struct EmojiMemoryGameView: View {
     
     // MARK: - States and ObservedObjects
     /// The EmojiMemoryGame viewModel that is managing the game model for this view; observed so we can update
@@ -62,13 +59,10 @@ struct ContentView: View {
     
     /// A Boolean State, true if, when the user clicks on a  the reset button, we need to show an alert
     @State private var needsResetAlert: Bool = false
-    
     /// A Boolean State, true if, when the user clicks on a  the new game button, we need to show an alert
     @State private var needsNewGameAlert: Bool = false
-
     /// A Boolean State, true if, when the user clicks on a  the remove cards button, we need to show an alert
     @State private var needsCardRemovingAlert: Bool = false
-
     /// A Boolean State, true if, when the user clicks on a  the add cards button, we need to show an alert
     @State private var needsCardAddingAlert: Bool = false
 
@@ -388,7 +382,7 @@ struct ContentView: View {
     
     /// For debugging the calculation of the corner radius, stores and prints to the console -- in a formatted way -- information about
     /// all the factors going into calculating the size of the cards.
-    struct DebuggingContent {
+    private struct DebuggingContent {
         /// The total border size that a border adds to a card: twice the width of the border
         let borderAllowance = ViewConstants.cardBorderWidth * 2
         /// When printing inside the loop, how far to make one indent.
@@ -509,27 +503,27 @@ struct ContentView: View {
     /// would be lost.
     /// With that information stored, this struct can produce a View that shows that information and responds appropriately when
     /// tapped, with the correctly worded alert, if needed, and the correct action if the alert is not needed or is dismissed.
-    struct GameChangingFeature {
+    private struct GameChangingFeature {
         
         /// the image to show in the view
-        var image: Image
+        let image: Image
         
         /// the text to show in the view, if any
-        var buttonText: String?
+        let buttonText: String?
         
         /// a Boolean State which can be unwrapped to find out whether an alert is needed, or its projectedValue Binding can be
         /// used to trigger that alert
-        var needsAlert: State<Bool>
+        let needsAlert: State<Bool>
         
         /// the function that takes no arguments and returns nothing but is called either if no alert is needed, or if the user
         /// dismisses the alert by indicating that they want to go ahead anyway.
-        var continueAction: ()->()
+        let continueAction: ()->()
         
         /// The text of the alert message, if one is needed
-        var alertMessage: String
+        let alertMessage: String
         
         /// The game that is being played and who can determine whether we need an alert
-        var game: EmojiMemoryGame
+        let game: EmojiMemoryGame
 
         /// Creates and returns a View that will change the current game according to all of the specified features. In a non-alert
         /// situation, it will call its continueAction when tapped. If an alert is needed, it will put up the alert with the appropriate text,
@@ -584,53 +578,21 @@ struct ContentView: View {
             }
         }
     } // end GameChangingFeature struct
-} // end ContentView
+} // end EmojiMemoryGameView
 
-/// The view of one single card, which can show an image when face up, and hides that image but shows the back of the card
-/// when face down. If the card is matched, it will appear slightly shaded if face up, and will disappear entirely if face down.
-struct CardView: View {
-    
-    /// The model for which this CardView is the View
-    let card: MemoryGame<String>.Card
-    
-    /// The radius of the circle that defines the rounded corner of the card; can be changed when the card changes size
-    var radius: Double
-    
-    /// A ZStack that consists of a rounded rectangle and some text, typically a single-character emoji. It will be displayed
-    /// differently depending on the state of the card (whether face up or face down, matched or unmatched).
-    var body: some View {
-        ZStack {
-            let shape = RoundedRectangle(cornerRadius: radius)
-            switch card.state() {
-            case .faceDownAndMatched:
-                shape.opacity(ViewConstants.downAndMatchedOpacity)
-            case .faceDownAndUnmatched:
-                shape.fill()
-            case .faceUpAndUnmatched:
-                shape.fill(.white )
-                shape.strokeBorder(lineWidth: ViewConstants.cardBorderWidth)
-                Text(card.content)
-                    .font(.largeTitle)
-            case .faceUpAndMatched:
-                shape.fill(.white )
-                shape.strokeBorder(lineWidth: ViewConstants.cardBorderWidth)
-                Text(card.content)
-                    .font(.largeTitle)
-                shape.opacity(ViewConstants.upAndMatchedOpacity)
-            }
-        }
-    }
-} // end CardView struct
+
+
+
 
 /// Allows previews to be shown in the development environment in various color schemes and orientations
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let game = EmojiMemoryGame()
         
-        ContentView(game: game)
+        EmojiMemoryGameView(game: game)
             .preferredColorScheme(.dark)
             .previewInterfaceOrientation(.landscapeLeft)
-        ContentView(game: game)
+        EmojiMemoryGameView(game: game)
             .preferredColorScheme(.light)
             .previewInterfaceOrientation(.portrait)
     }

@@ -25,7 +25,18 @@ struct MemoryGame<CardContent> where CardContent: Equatable {  // Generic over a
     
     /// The means of deterimining which, if any, card is face up. On any attempt at matching, we can only attempt to match the
     /// new card being chosen with the face up card.
-    private var indexOfTheFaceUpCard: Int?
+    private var indexOfTheFaceUpCard: Int? {
+        set {
+            cards.indices.forEach {
+                if $0 == newValue {
+                    cards[$0].goFaceUp()
+                } else {
+                    turnFaceDown(at: $0)  // May impact the score
+                }
+            }
+        }
+        get {cards.indices.filter({cards[$0].isFaceUp}).oneAndOnly}
+    }
     
     /// Maintain the score for the game, readable anywhere in the project, but settable only by the game
     private(set) var score = 0
@@ -37,8 +48,7 @@ struct MemoryGame<CardContent> where CardContent: Equatable {  // Generic over a
     ///   - numberOfPairsOfCards: an Integer for the desired number of pairs
     ///   - createCardContent: a closure that will generate some sort of card content for the given card pair
     init(numberOfPairsOfCards: Int, createCardContent: (Int) -> CardContent) {
-        cards = Array<Card>()
-        
+        cards = []
         // add numberOfPairsOfCards X 2 cards to cards array
         for pairIndex in 0..<numberOfPairsOfCards {
             let content = createCardContent(pairIndex)
@@ -70,12 +80,10 @@ struct MemoryGame<CardContent> where CardContent: Equatable {  // Generic over a
                     cards[alreadyUpIndex].becomeMatched()
                     score += Constants.matchIncrement
                 }
-                indexOfTheFaceUpCard = nil
+                cards[chosenIndex].goFaceUp()
             } else {
-                turnAllFaceDown()
                 indexOfTheFaceUpCard = chosenIndex
             }
-            cards[chosenIndex].flip()
         }
     }
     // MARK: - Queries
@@ -136,9 +144,14 @@ struct MemoryGame<CardContent> where CardContent: Equatable {  // Generic over a
     private mutating func turnAllFaceDown() {
         if noneFaceUp() {return}
         for index in cards.indices {
-            let scoreChanged = cards[index].goFaceDown()
-            score -= scoreChanged.intValue
+            turnFaceDown(at: index)
         }
+    }
+    
+    /// Turn the card at the given index face down. As a side effect, modify the score to penalize the player if any of the cards
+    /// report that they were previously seen as they go face down.
+    private mutating func turnFaceDown(at index: Int) {
+        score -= cards[index].goFaceDown().intValue
     }
     
     // MARK: - Nested Struct(s)
@@ -154,11 +167,11 @@ struct MemoryGame<CardContent> where CardContent: Equatable {  // Generic over a
     struct Card : Identifiable {
         
         // MARK: - Instance variables
-        var isFaceUp = false
-        var isMatched = false
-        var previouslySeen = false
-        var content: CardContent
-        var id: Int
+        private(set) var isFaceUp = false
+        private(set) var isMatched = false
+        private(set) var previouslySeen = false
+        let content: CardContent
+        let id: Int
         
         // MARK: - Instance methods
         /// Flip the card over, turning it face up if it is face down, or vice versa
@@ -171,6 +184,10 @@ struct MemoryGame<CardContent> where CardContent: Equatable {  // Generic over a
             isMatched = true
         }
         
+        /// Turn the receiver face up
+        mutating func goFaceUp() {
+            isFaceUp = true
+        }
         /// Turn this card face down, but only if it's face up. If it is face up, also record that it has
         /// been seen. Answer a Boolean: whether or not turning down this card should incur a
         /// penalty. If the card was face down, no penalty. If it had been seen already before this turn,
@@ -218,59 +235,7 @@ struct MemoryGame<CardContent> where CardContent: Equatable {  // Generic over a
 struct Theme: Equatable {
     
     // MARK: - Type (aka "Class") methods
-    /// Factory method to create and return a Theme for a given ThemeName. These are the "factory installed" themes, but
-    /// others can be added to the game by creating a new... No it can't. Removed in favor of a factory method using a String
-    /// for the name, rather than the enum.
-    /// - Parameter themeName: the ThemeName enum on which to base the theme
-    /// - Returns: a Theme with its emojis, name, and image bundled together
-    /// - Depricated 
-//    static func themeForName(_ themeName: ThemeName) -> Theme {
-//        let travelEmojis = ["🚗", "🚲", "🚤", "🚎", "🚌", "🚜", "🚓", "🚑", "🚛", "🛴", "🦼",
-//                            "🚠", "✈️", "🚀", "🚁", "🛶", "🛸", "🛫", "🚒", "🛵", "🚃", "🚄",
-//                            "🚂", "⛵️", "🛷", "🦽", "🎢", "🎠"]
-//        let valentineEmojis = ["🥰", "😍", "😘", "💋", "🍫", "🥂", "🎡", "💒", "❤️", "💖",
-//                               "💕", "💞", "💓", "💘"]
-//        let sportsEmojis = ["⚽️", "🏀", "🏈", "⚾️", "🥎", "🎾", "🏐", "🥏", "🏓", "🏸", "🏑",
-//                            "🏏", "⛳️", "⛸", "⛷", "🏊", "🚴"]
-//        let halloweenEmojis = ["😈", "🤡", "👻", "💀", "👽", "🤖", "🎃", "🕷", "🍩", "🍫",
-//                               "🍎", "🍬"]
-//        let foodEmojis = ["🍏", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒",
-//                          "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒",
-//                          "🌶", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔", "🍠", "🥐", "🥯",
-//                          "🍞", "🥖", "🥨", "🧀", "🥚", "🧈", "🥞", "🧇", "🥓", "🥩", "🍗",
-//                          "🍖", "🌭", "🍔", "🍟", "🍕", "🥪", "🥙", "🌮"]
-//        let occupationEmojis = ["👮🏼‍♀️", "👩🏾‍⚕️", "👩🏼‍🌾", "👩🏻‍🏫", "👩🏼‍💻", "👩🏼‍🔬", "👩🏽‍🎨", "👩🏼‍🚒", "👩🏻‍🚀", "👩🏼‍⚖️",
-//                                "👩🏽‍🍼", "💇🏽‍♂️", "🤺", "⛷", "🚴🏼‍♀️", "🤹🏾‍♀️", "🏌🏾‍♀️"]
-//
-//
-//        switch themeName {
-//        case .travel:
-//            return Theme(emojis: travelEmojis,
-//                         name: themeName,
-//                         color: "Green")
-//        case .valentine:
-//            return Theme(emojis: valentineEmojis,
-//                         name: themeName,
-//                         color: "Pink")
-//        case .sports:
-//            return Theme(emojis: sportsEmojis,
-//                         name: themeName,
-//                         color: "Red")
-//        case .halloween:
-//            return Theme(emojis: halloweenEmojis,
-//                         name: themeName,
-//                         color: "Orange")
-//        case .food:
-//            return Theme(emojis: foodEmojis,
-//                         name: themeName,
-//                         color: "Mint")
-//        case .occupations:
-//            return Theme(emojis: occupationEmojis,
-//                         name: themeName,
-//                         color: "Brown")
-//        }
-//    }
-    
+
     /// Factory method to create and return a Theme based on a given String name. The cases here cover the "factory installed"
     /// themes, but others can be added to the game by creating a new Theme with the init.
     /// - Parameter themeName: the ThemeName enum on which to base the theme

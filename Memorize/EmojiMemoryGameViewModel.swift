@@ -11,10 +11,13 @@ import CoreMedia
 /// ViewModel - acts as the gatekeeper between the view and the model
 class EmojiMemoryGame: ObservableObject {
     
+    typealias CardGame = MemoryGame<String>
+    typealias Card = CardGame.Card
+    
     // MARK: - Constants
     
     /// A structure encapsulating the Constants for the EmojiMemoryGame
-    struct Constants {
+    private struct Constants {
         
         /// If no other theme is chosen, default to the first one
         static let defaultThemeIndex = 0
@@ -35,21 +38,9 @@ class EmojiMemoryGame: ObservableObject {
         return themes[currentThemeIndex]
     }
 
-    // MARK: - Class Methods
-    
-    /// This way of doing things, with ThemeName as an enum, doesn't satisfy the requirement of
-    /// this assigment to allow a Theme to be created in a single line of code, so I'm going to
-    /// remove it and replace it with one where the name of the theme is just a string.
-    /// Depricated
-//    private static func initializeThemes() -> [Theme]{
-//       var answer = [Theme]()
-//       for eachName in ThemeName.allCases {
-//           answer.append(Theme.themeForName(eachName))
-//       }
-//       return answer
-//   }
-    
-    // MARK: - Class methods for managing Themes (adding, initializing, modifying, and selecting among them)
+
+    // MARK: - Class methods for managing Themes
+    // (adding, initializing, modifying, and selecting among them)
     
     /// Initializes a collection of default themes from which to build games
     /// - Returns: an Array of Themes
@@ -110,7 +101,7 @@ class EmojiMemoryGame: ObservableObject {
     // MARK: - Class methods for creating Memory Game models
     /// Creates and answers a new MemoryGame by randomly selecting among the available Themes.
     /// - Returns: a MemoryGame with CardContents of type String (the emojis in the Theme)
-    static func randomMemoryGame() -> MemoryGame<String> {
+    static func randomMemoryGame() -> CardGame {
         self.createMemoryGame(for: self.randomTheme())
 
     }
@@ -118,7 +109,7 @@ class EmojiMemoryGame: ObservableObject {
     /// creates and answers a MemoryGame for the current theme.
     /// - Parameter theme: the Theme (name, color, and collection of emojis) that represent this game
     /// - Returns: a MemoryGame with CardContents of type String (the emojis in the Theme)
-    static func createMemoryGame(for theme: Theme) -> MemoryGame<String> {
+    private static func createMemoryGame(for theme: Theme) -> CardGame {
         if let themeIndex = themes.firstIndex(where: {$0 == theme}) {
             currentThemeIndex = themeIndex
         }
@@ -129,10 +120,10 @@ class EmojiMemoryGame: ObservableObject {
     /// repreesnting that theme.
     /// - Parameter index: an Integer index into the Array of Themes
     /// - Returns: a MemoryGame with CardContents of type String (the emojis in the Theme at the index)
-    private static func createMemoryGame(at index: Int) -> MemoryGame<String> {
+    private static func createMemoryGame(at index: Int) -> CardGame {
         currentThemeIndex = index
         let shuffledEmojis = themes[currentThemeIndex].emojis.shuffled()
-        return MemoryGame<String>(numberOfPairsOfCards: currentTheme.numEmojisToShow) { pairIndex in
+        return CardGame(numberOfPairsOfCards: currentTheme.numEmojisToShow) { pairIndex in
             shuffledEmojis[pairIndex]
         }
     }
@@ -142,7 +133,7 @@ class EmojiMemoryGame: ObservableObject {
     /// The domain model representing and managing the logic of the game. The MemoryGame is responsible for reacting
     /// when a card is chosen and/or matched, and maintaining the score.
     /// We use the @Published propertyWrapper to inform the View to update when anything in the MemoryGame changes.
-    @Published private var model: MemoryGame<String> = randomMemoryGame()
+    @Published private var model = randomMemoryGame()
     
     /// To make the cards look card-like, the rounding of the corners should be proportional to the size of the cards; when
     /// cards are added or removed, or the theme changes (showing potentially more or fewer cards), this value will change.
@@ -150,7 +141,7 @@ class EmojiMemoryGame: ObservableObject {
     var currentCornerRadius = Constants.initialCornerRadiius
     
     /// The collection of Cards held and managed by the MemoryGame model. Exposed here so they can be displayed in the View.
-    var cards: Array<MemoryGame<String>.Card> {
+    var cards: Array<Card> {
         return model.cards
     }
     
@@ -211,7 +202,7 @@ class EmojiMemoryGame: ObservableObject {
     
     /// Initiates the logic for one play of the game, when a user chooses a card
     /// - Parameter card: one of the Cards currently showing in the game
-    func choose(_ card: MemoryGame<String>.Card) {
+    func choose(_ card: Card) {
         model.choose(card)
     }
     
@@ -251,80 +242,3 @@ class EmojiMemoryGame: ObservableObject {
     
 
 }
-
-/// *Depricated
-/// The characteristics of a given theme, including its name, an image that represents the entire theme,
-/// and the emojis contained in that theme. This was once in the ViewModel because it contained SwiftUI-specific
-/// references, like Color and Image; now in the model.
-//struct Theme {
-//    let emojis: [String]
-//    let name: ThemeName
-//    let image: Image
-//    let color: Color
-//
-//    init(emojis: [String], name: ThemeName, image: Image, color: Color) {
-//        self.emojis = emojis
-//        self.name = name
-//        self.image = image
-//        self.color = color
-//    }
-//    /// Factory method to create and return a Theme for a given ThemeName
-//    /// - Parameter themeName: the ThemeName enum on which to base the theme
-//    /// - Returns: a Theme with its emojis, name, and image bundled together
-//    static func themeForName(_ themeName: ThemeName) -> Theme {
-//        let travelEmojis = ["🚗", "🚲", "🚤", "🚎", "🚌", "🚜", "🚓", "🚑", "🚛", "🛴", "🦼",
-//                            "🚠", "✈️", "🚀", "🚁", "🛶", "🛸", "🛫", "🚒", "🛵", "🚃", "🚄",
-//                            "🚂", "⛵️", "🛷", "🦽", "🎢", "🎠"]
-//        let valentineEmojis = ["🥰", "😍", "😘", "💋", "🍫", "🥂", "🎡", "💒", "❤️", "💖",
-//                               "💕", "💞", "💓", "💘"]
-//        let sportsEmojis = ["⚽️", "🏀", "🏈", "⚾️", "🥎", "🎾", "🏐", "🥏", "🏓", "🏸", "🏑",
-//                            "🏏", "⛳️", "⛸", "⛷", "🏊", "🚴"]
-//        let halloweenEmojis = ["😈", "🤡", "👻", "💀", "👽", "🤖", "🎃", "🕷", "🍩", "🍫",
-//                               "🍎", "🍬"]
-//        let foodEmojis = ["🍏", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒",
-//                          "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒",
-//                          "🌶", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔", "🍠", "🥐", "🥯",
-//                          "🍞", "🥖", "🥨", "🧀", "🥚", "🧈", "🥞", "🧇", "🥓", "🥩", "🍗",
-//                          "🍖", "🌭", "🍔", "🍟", "🍕", "🥪", "🥙", "🌮"]
-//        let occupationEmojis = ["👮🏼‍♀️", "👩🏾‍⚕️", "👩🏼‍🌾", "👩🏻‍🏫", "👩🏼‍💻", "👩🏼‍🔬", "👩🏽‍🎨", "👩🏼‍🚒", "👩🏻‍🚀", "👩🏼‍⚖️",
-//                                "👩🏽‍🍼", "💇🏽‍♂️", "🤺", "⛷", "🚴🏼‍♀️", "🤹🏾‍♀️", "🏌🏾‍♀️"]
-//
-//
-//        switch themeName {
-//        case .travel:
-//            return Theme(emojis: travelEmojis,
-//                         name: themeName,
-//                         image: Image(systemName: "car"),
-//                         color: .green)
-//        case .valentine:
-//            return Theme(emojis: valentineEmojis,
-//                         name: themeName,
-//                         image: Image(systemName: "heart"),
-//                         color: .pink.opacity(0.65))
-//        case .sports:
-//            return Theme(emojis: sportsEmojis,
-//                         name: themeName,
-//                         image: Image(systemName: "sportscourt"),
-//                         color: .red)
-//        case .halloween:
-//            return Theme(emojis: halloweenEmojis,
-//                         name: themeName,
-//                         image: Image(systemName: "moon"),
-//                         color: .orange)
-//        case .food:
-//            return Theme(emojis: foodEmojis,
-//                         name: themeName,
-//                         image: Image(systemName: "fork.knife"),
-//                         color: .mint)
-//        case .occupations:
-//            return Theme(emojis: occupationEmojis,
-//                         name: themeName,
-//                         image: Image(systemName: "figure.walk"),
-//                         color: .brown)
-//        }
-//    }
-//
-//    func maxEmojis() -> Int {
-//        return emojis.count
-//    }
-//}
