@@ -56,7 +56,7 @@ struct CardView: View {
         shape.fill(.white)
         shape.strokeBorder(lineWidth: ViewConstants.cardBorderWidth)
         Text(card.content).font(.system(size: textSizeFor(size)))
-        if card.state() == CardState.faceUpAndMatched {
+        if card.state() == .faceUpAndMatched {
             shape.opacity(ViewConstants.upAndMatchedOpacity)
         } else {
             shape.opacity(ViewConstants.upAndUnmatchedOpacity)

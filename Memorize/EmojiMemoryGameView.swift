@@ -24,7 +24,7 @@ struct ViewConstants {
     
     /// The value of the opacity of a card when it has been turned up and is unmatched; 0 == fully transparent; 1 == fully opaque;
     /// when cards are up and unmatched, make them fully opaque.
-    static let upAndUnmatchedOpacity = 1.0
+    static let upAndUnmatchedOpacity = 0.0
     
     /// The value of the opacity of a card when it is turned up but was just matched; dim it distinguish between it and an unmatched
     /// card
