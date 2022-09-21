@@ -18,10 +18,16 @@ struct ViewConstants {
     /// The shape of the cards, width relative to height
     static let cardAspectRatio = 2.0/3.0
         
-    /// The value of the opacity of a card when it has been turned down and is matched; 0 == fully transparent; 1 == fully opaque; when cards are matched, make them transparent so they disappear from view
+    /// The value of the opacity of a card when it has been turned down and is matched; 0 == fully transparent; 1 == fully opaque;
+    /// when cards are matched, make them transparent so they disappear from view
     static let downAndMatchedOpacity = 0.0
     
-    /// The value of the opacity of a card when it is still turned down but was just matched; dim it to show this
+    /// The value of the opacity of a card when it has been turned up and is unmatched; 0 == fully transparent; 1 == fully opaque;
+    /// when cards are up and unmatched, make them fully opaque.
+    static let upAndUnmatchedOpacity = 1.0
+    
+    /// The value of the opacity of a card when it is turned up but was just matched; dim it distinguish between it and an unmatched
+    /// card
     static let upAndMatchedOpacity = 0.1
     
     /// A Boolean, true if we are currently printing a lot of diagnostics about the card width calculations to the console
@@ -47,6 +53,9 @@ struct ViewConstants {
     /// A Double, the denominator for the fraction of the width of a single card that should serve as the radius
     /// of the circle creating the rounded corner of a card
     static let cornerRadiusFactor = 4.0
+    
+    /// A Double that relates the size of the text emoji to the size of a card
+    static let emojiScale = 0.8
 } // end ViewConstants
 
 /// A View composing the entire UI of the App
@@ -566,7 +575,7 @@ struct EmojiMemoryGameView: View {
         /// - Parameter yesAction: an escaping closure that takes no arguments and returns no value and will be called
         /// if the user indicates that, yes, they want to go ahead anyway, despite the alert.
         /// - Returns: a View built from the component Yes and No buttons by the ViewBuilder
-        @ViewBuilder private func alertActionsFor(_ yesAction: @escaping ()-> Void) ->some View {
+        @ViewBuilder private func alertActionsFor(_ yesAction: @escaping ()-> Void) -> some View {
             Button(role: .destructive) {
                 yesAction()
             } label: {
