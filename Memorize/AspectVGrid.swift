@@ -53,16 +53,7 @@ struct AspectVGrid<Item, ItemView>: View where ItemView: View, Item: Identifiabl
             )
         )
     }
-    
-    /// Calculates and returns a corner radius appropriate to the size of the cards. This is used instead of a constant corner
-    /// radius, because as the cards get smaller, if the corner radius was the same, the cards would start to look more like
-    /// ovals than like cards
-    /// - Parameter cardWidth: a Double: the width of a single card
-    /// - Returns: a Double: the radius of the circle rounding the corner of a CardView
-    private func cornerRadius(basedOn cardWidth: Double) -> Double {
-        return cardWidth / ViewConstants.cornerRadiusFactor
-    }
-    
+        
     /// Return the exact width of a card that puts all cards on the table without requiring vertical scrolling.
     ///
     /// We will be looping through the number of cards to see how they fit, but to be smart about it, we won't
