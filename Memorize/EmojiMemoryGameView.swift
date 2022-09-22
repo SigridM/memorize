@@ -74,7 +74,7 @@ struct EmojiMemoryGameView: View {
     @State private var needsCardRemovingAlert: Bool = false
     /// A Boolean State, true if, when the user clicks on a  the add cards button, we need to show an alert
     @State private var needsCardAddingAlert: Bool = false
-
+    
     // MARK: - body
     /// A View of the entire layout of the UI, including the title, the theme, the score, all of the cards (sized so they fit
     /// without requiring scrolling, if possible, and buttons for reseting the game with the current theme, choosing randomly
@@ -85,7 +85,8 @@ struct EmojiMemoryGameView: View {
             Text("Memorize!")
             themeNameDisplay
             scoreDisplay
-            scrollViewGeometryReader
+           // scrollViewGeometryReader
+            aspectVGrid
             Spacer()
             HStack {
                 resetGameInitiator
@@ -133,6 +134,18 @@ struct EmojiMemoryGameView: View {
         GeometryReader { scrollViewGeometryProxy in
             scrollView(withGeometry: scrollViewGeometryProxy)
         }
+    }
+    
+    private var aspectVGrid: some View {
+        AspectVGrid(items: game.cards,
+                    aspectRatio: ViewConstants.cardAspectRatio,
+                    content: { card, width in
+            CardView(card: card, radius: cornerRadius(basedOn: width))
+                .onTapGesture {
+                    game.choose(card)
+                }
+                .foregroundColor(game.cardColor())
+        })
     }
     
     /// A UI element that, when selected, initiates a new game with a random theme;
@@ -198,7 +211,7 @@ struct EmojiMemoryGameView: View {
     private func scrollView(withGeometry scrollViewGeometryProxy: GeometryProxy) -> some View {
         ScrollView {
             LazyVGrid(
-                columns: [gridItemFor(scrollViewSize: scrollViewGeometryProxy.size)]
+                columns: [gridItemFor(scrollViewSize: scrollViewGeometryProxy.size, radius: &game.currentCornerRadius)]
             ) {
                 ForEach(game.cards) { card in
                     CardView(card: card, radius: game.currentCornerRadius)
@@ -218,9 +231,9 @@ struct EmojiMemoryGameView: View {
     /// of the cards gets updated whenever this is called.
     /// - Parameter size: the CGSize of the ScrollView that holds the GridItem
     /// - Returns: a GridItem sized to the correct size
-    private func gridItemFor(scrollViewSize: CGSize) -> GridItem {
+    private func gridItemFor(scrollViewSize: CGSize, radius: inout Double) -> GridItem {
         let cardWidth = cardWidthFor(scrollViewSize: scrollViewSize)
-        game.currentCornerRadius = cornerRadius(basedOn: cardWidth)
+        radius = cornerRadius(basedOn: cardWidth)
         return GridItem(
             .adaptive(
                 minimum: cardWidth,
