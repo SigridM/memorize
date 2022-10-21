@@ -125,7 +125,9 @@ struct EmojiMemoryGameView: View {
                     + punctuation)
             .foregroundColor(game.cardColor())
     }
-
+    
+    /// A UI element that maintians the aspect ratio of the view of each item in a grid while maximizing the size of the item but
+    /// also making them small enough that vertical scrolling is not required
     private var aspectVGrid: some View {
         AspectVGrid(items: game.cards,
                     aspectRatio: ViewConstants.cardAspectRatio,
