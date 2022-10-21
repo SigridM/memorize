@@ -7,9 +7,17 @@
 
 import SwiftUI
 
+/// A View that maintains the aspect ratio of its contents while maximizing the number of items
+/// in the grid to avoid vertical scrolling.
 struct AspectVGrid<Item, ItemView>: View where ItemView: View, Item: Identifiable {
+ 
+    ///The models whose view representations are laid out in a grid
     var items: [Item]
+    
+    /// The ratio of width to height that will be maintained
     var aspectRatio: CGFloat
+    
+    /// The closure that converts each model in the grid into a view, given the model and the currently calculated width.
     var content: (Item, CGFloat) -> ItemView
 
     init(items: [Item],
@@ -22,6 +30,8 @@ struct AspectVGrid<Item, ItemView>: View where ItemView: View, Item: Identifiabl
     
     
     
+    /// Creates and returns the main view for the AspectVGrid, using a GeometryReader to guide the width of each item in
+    /// the grid.
     var body: some View {
         GeometryReader { geometry in
             VStack { // This, plus the spacer, will make the whole GeometryReader of flexible size
@@ -175,8 +185,3 @@ struct AspectVGrid<Item, ItemView>: View where ItemView: View, Item: Identifiabl
 
 }
 
-//struct AspectVGrid_Previews: PreviewProvider {
-//    static var previews: some View {
-//        AspectVGrid()
-//    }
-//}
