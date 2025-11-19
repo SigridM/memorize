@@ -7,10 +7,11 @@
 
 import SwiftUI
 
-
 /// The view of one single card, which can show an image when face up, and hides that image but shows the back of the card
 /// when face down. If the card is matched, it will appear slightly shaded if face up, and will disappear entirely if face down.
 struct CardView: View {
+    
+    @State private var animatedBonusRemaining: Double = 0
     
     /// The model for which this CardView is the View
     let card: EmojiMemoryGame.Card
@@ -23,16 +24,35 @@ struct CardView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                let shape = RoundedRectangle(cornerRadius: radius)
-                switch card.state() {
-                case .faceDownAndMatched:
-                    shape.opacity(ViewConstants.downAndMatchedOpacity)
-                case .faceDownAndUnmatched:
-                    shape.fill()
-                case .faceUpAndUnmatched, .faceUpAndMatched:
-                    faceUpCard(for: card, inSize: geometry.size)
+                Group {
+                    if card.isConsumingBonusTime {
+                        Pie(
+                            startAngle: Angle(degrees: ViewConstants.startAngle + ViewConstants.angleCorrection),
+                            endAngle: Angle(degrees: (1 - animatedBonusRemaining) * 360 + ViewConstants.angleCorrection)
+                        )
+                        .onAppear {
+                            animatedBonusRemaining = card.bonusRemaining
+                            withAnimation(.linear(duration: card.bonusTimeRemaining)) {
+                                animatedBonusRemaining = 0
+                            }
+                        }
+                    }
+                    else {
+                        Pie(
+                            startAngle: Angle(degrees: ViewConstants.startAngle + ViewConstants.angleCorrection),
+                            endAngle: Angle(degrees: (1 - card.bonusRemaining) * 360 + ViewConstants.angleCorrection)
+                        )
+                    }
                 }
+                .padding(ViewConstants.piePadding)
+                .opacity(ViewConstants.pieOpacity)
+                Text(card.content)
+                    .rotationEffect(Angle.degrees((card.state() == .faceUpAndMatched) ? 360 : 0))
+                    .animation(Animation.linear(duration:1).repeatCount(3, autoreverses: false), value: card.state() == .faceUpAndMatched)
+                    .font(Font.system(size: ViewConstants.emojiSize))
+                    .scaleEffect(textScaleFor(geometry.size))
             }
+            .cardify(isFaceUp: card.isFaceUp, radius: radius)
         }
     }
     
@@ -40,8 +60,8 @@ struct CardView: View {
     /// Encapsulates the calculation of the emoji text size based on the given size for the CardView
     /// - Parameter size: the size offered to this card
     /// - Returns: a CGFloat that is the text size for this card
-    private func textSizeFor(_ size: CGSize) -> CGFloat {
-        min(size.width, size.height) * ViewConstants.emojiScale
+    private func textScaleFor(_ size: CGSize) -> CGFloat {
+        min(size.width, size.height) / (ViewConstants.emojiSize / ViewConstants.emojiScale)
     }
     
     /// Builds and returns a View for a faceUp card, which may be different, depending on whether the card
@@ -51,16 +71,8 @@ struct CardView: View {
     ///   - size: the CGSize offered to this card for its size
     /// - Returns: a View that is a composite of other Views: a RoundedRect and the text showing the emoji
     @ViewBuilder
-    private func faceUpCard(for card: EmojiMemoryGame.Card, inSize size: CGSize) -> some View {
-        let shape = RoundedRectangle(cornerRadius: radius)
-        shape.fill(.white)
-        shape.strokeBorder(lineWidth: ViewConstants.cardBorderWidth)
-        Text(card.content).font(.system(size: textSizeFor(size)))
-        if card.state() == .faceUpAndMatched {
-            shape.opacity(ViewConstants.upAndMatchedOpacity)
-        } else {
-            shape.opacity(ViewConstants.upAndUnmatchedOpacity)
-        }
+    private func cardContent(for card: EmojiMemoryGame.Card, inSize size: CGSize) -> some View {
+
     }
                     
 } // end CardView struct

@@ -143,7 +143,7 @@ class EmojiMemoryGame: ObservableObject {
     /// The collection of Cards held and managed by the MemoryGame model. Exposed here so they can be displayed in the View.
     var cards: Array<Card> {
         return model.cards
-    }
+    } 
     
     // MARK: - Instance methods, Queries
     

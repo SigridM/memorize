@@ -20,16 +20,13 @@ struct ViewConstants {
         
     /// The value of the opacity of a card when it has been turned down and is matched; 0 == fully transparent; 1 == fully opaque;
     /// when cards are matched, make them transparent so they disappear from view
-    static let downAndMatchedOpacity = 0.0
+    static let transparent = 0.0
     
-    /// The value of the opacity of a card when it has been turned up and is unmatched; 0 == fully transparent; 1 == fully opaque;
-    /// when cards are up and unmatched, make them fully opaque.
-    static let upAndUnmatchedOpacity = 0.0
+    /// The value of the opacity of a card when it is not turned down and is matched; 0 == fully transparent; 1 == fully opaque;
+    /// when cards are not matched, make them opaque so they show on view
+    static let opaque = 1.0
     
-    /// The value of the opacity of a card when it is turned up but was just matched; dim it distinguish between it and an unmatched
-    /// card
-    static let upAndMatchedOpacity = 0.1
-    
+
     /// A Boolean, true if we are currently printing a lot of diagnostics about the card width calculations to the console
     static let debuggingCardWidth = false
     
@@ -55,7 +52,23 @@ struct ViewConstants {
     static let cornerRadiusFactor = 4.0
     
     /// A Double that relates the size of the text emoji to the size of a card
-    static let emojiScale = 0.8
+    static let emojiScale = 0.65
+    
+    static let emojiSize: CGFloat = 32
+    
+    static let piePadding = 5.0
+    
+    static let pieOpacity = 0.5
+    
+    static let angleCorrection = -90.0
+    
+    static let startAngle = 0.0
+    
+    static let undealtCardHeight: CGFloat = 90
+    static let undealtCardWidth = undealtCardHeight * cardAspectRatio
+    
+    static let dealDuration: CGFloat = 1
+    static let totalDealDuration: CGFloat = 1
 } // end ViewConstants
 
 /// A View composing the entire UI of the App
@@ -75,6 +88,94 @@ struct EmojiMemoryGameView: View {
     /// A Boolean State, true if, when the user clicks on a  the add cards button, we need to show an alert
     @State private var needsCardAddingAlert: Bool = false
     
+    @State private var dealt = Set<Int>()
+    
+    @Namespace private var dealingNameSpace
+    
+    @State private var animationAmount = 1.0
+    
+    var animatedButton: some View {
+        Button("Tap Me") {
+//            animationAmount += 1
+        }
+        .padding(50)
+        .background(.red)
+        .foregroundColor(.white)
+        .clipShape(Circle())
+        .overlay(
+            Circle()
+                .stroke(.red)
+                .scaleEffect(animationAmount)
+                .opacity(2 - animationAmount)
+                .animation(
+                    .easeInOut(duration: 1)
+                        .repeatForever(autoreverses: false),
+                    value: animationAmount
+                )
+        )
+//        .scaleEffect(animationAmount)
+//        .animation(.easeInOut(duration: 2), value: animationAmount)
+        .onAppear {
+            animationAmount = 2
+        }
+    }
+    
+    private func deal(_ card: EmojiMemoryGame.Card) {
+        dealt.insert(card.id)
+    }
+    
+    private func isUndealt(_ card: EmojiMemoryGame.Card) -> Bool {
+        !dealt.contains(card.id)
+    }
+    
+    private func dealAnimation(for card: EmojiMemoryGame.Card) -> Animation {
+        var delay = 1.0
+        
+        if let index = game.cards.firstIndex(where: {$0.id == card.id}) {
+            delay = Double(index) * ViewConstants.totalDealDuration / Double(game.cards.count)
+            print(delay)
+        }
+//        return Animation.easeInOut(duration: ViewConstants.dealDuration).delay(delay)
+//        return Animation.spring(response: delay, dampingFraction: 0.5, blendDuration: ViewConstants.dealDuration).delay(delay)
+//        return Animation.linear(duration: ViewConstants.dealDuration).delay(delay)
+//        return Animation.easeIn(duration: ViewConstants.dealDuration).delay(delay)
+        return Animation.spring(response: 1, dampingFraction: 1, blendDuration: 1).delay(delay)
+
+
+    }
+    
+    private func reset() {
+        withAnimation {
+            dealt = []
+            game.reset()
+        }
+    }
+    
+    private func newGame() {
+        withAnimation {
+            game.newRandomGame()
+            dealt = []
+        }
+
+    }
+    
+    private func increaseCards() {
+        withAnimation {
+            dealt = []
+            game.increaseCards()
+        }
+    }
+    
+    private func decreaseCards() {
+        withAnimation {
+            dealt = []
+            game.decreaseCards()
+        }
+    }
+    
+    private func zIndex(of card: EmojiMemoryGame.Card) -> Double {
+        -Double(game.cards.firstIndex(where: {$0.id == card.id}) ?? 0)
+    }
     // MARK: - body
     /// A View of the entire layout of the UI, including the title, the theme, the score, all of the cards (sized so they fit
     /// without requiring scrolling, if possible, and buttons for reseting the game with the current theme, choosing randomly
@@ -85,16 +186,20 @@ struct EmojiMemoryGameView: View {
             Text("Memorize!")
             themeNameDisplay
             scoreDisplay
-            aspectVGrid
+            gameBody
             Spacer()
             HStack {
                 resetGameInitiator
                 Spacer()
+//                animatedButton
+//                Spacer()
                 newGameInitiator
             }
             Spacer()
             HStack {
                 cardRemover
+                Spacer()
+                deckBody
                 Spacer()
                 cardAdder
             }
@@ -128,16 +233,55 @@ struct EmojiMemoryGameView: View {
     
     /// A UI element that maintians the aspect ratio of the view of each item in a grid while maximizing the size of the item but
     /// also making them small enough that vertical scrolling is not required
-    private var aspectVGrid: some View {
+    private var gameBody: some View {
         AspectVGrid(items: game.cards,
-                    aspectRatio: ViewConstants.cardAspectRatio,
-                    content: { card, width in
-            CardView(card: card, radius: cornerRadius(basedOn: width))
-                .onTapGesture {
-                    game.choose(card)
+                    aspectRatio: ViewConstants.cardAspectRatio)
+        { card, width in
+
+            if isUndealt(card) || ((card.state() == .faceDownAndMatched)) {
+                Color.clear
+            } else {
+                CardView(card: card, radius: cornerRadius(basedOn: width))
+//                    .transition(AnyTransition.scale.animation(Animation.easeInOut(duration: 2)))
+                    .zIndex(zIndex(of: card))
+                    .rotation3DEffect(Angle(degrees: 0), axis: (x: 1, y: 0, z: 0))
+                    .matchedGeometryEffect(id: card.id, in: dealingNameSpace)
+//                    .transition(AnyTransition.asymmetric(insertion: .identity, removal: .identity))
+                    .onTapGesture {
+                        withAnimation {
+                            game.choose(card)
+                        }
+                    }
+                    .foregroundColor(game.cardColor())
+            }
+        }
+
+    }
+    
+    private var deckBody: some View {
+        ZStack {
+            ForEach(game.cards.filter(isUndealt)) { card in
+                CardView(card: card, radius: cornerRadius(basedOn: ViewConstants.undealtCardWidth))
+                    .zIndex(zIndex(of: card))
+                    .matchedGeometryEffect(id: card.id, in: dealingNameSpace)
+//                    .transition(AnyTransition.asymmetric(insertion: .identity, removal: .identity))
+                    .foregroundColor(game.cardColor())
+                    .background(.white)
+            }
+        }
+//        .rotation3DEffect(Angle.degrees(70), axis: (x: 1, y: 0, z: 0))
+
+        .onTapGesture {
+            for card in game.cards {
+                withAnimation(dealAnimation(for: card)) {
+                    deal(card)
                 }
-                .foregroundColor(game.cardColor())
-        })
+            }
+        }
+        .frame(width: ViewConstants.undealtCardWidth, height: ViewConstants.undealtCardHeight)
+        .rotation3DEffect(Angle.degrees(70), axis: (x: 1, y: 0, z: 0))
+        .padding()
+
     }
     
     /// A UI element that, when selected, initiates a new game with a random theme;
@@ -147,7 +291,7 @@ struct EmojiMemoryGameView: View {
             image: ViewConstants.newGameImage,
             buttonText: "New Game",
             needsAlert: _needsNewGameAlert,
-            continueAction: game.newRandomGame,
+            continueAction: newGame,
             alertMessage: ViewConstants.newGameAlertMessage,
             game: game
         )
@@ -161,7 +305,7 @@ struct EmojiMemoryGameView: View {
             image: ViewConstants.resetImage,
             buttonText: "Reset",
             needsAlert: _needsResetAlert,
-            continueAction: game.reset,
+            continueAction: reset,
             alertMessage: ViewConstants.resetAlertMessage,
             game: game
         )
@@ -174,7 +318,7 @@ struct EmojiMemoryGameView: View {
             image: ViewConstants.removeImage,
             buttonText: nil,
             needsAlert: _needsCardRemovingAlert,
-            continueAction: game.decreaseCards,
+            continueAction: decreaseCards,
             alertMessage: ViewConstants.removeCardsAlertMessage,
             game: game
         )
@@ -187,7 +331,7 @@ struct EmojiMemoryGameView: View {
             image: ViewConstants.addImage,
             buttonText: nil,
             needsAlert: _needsCardAddingAlert,
-            continueAction: game.increaseCards,
+            continueAction: increaseCards,
             alertMessage: ViewConstants.addCardsAlertMessage,
             game: game
         )
@@ -297,11 +441,8 @@ struct EmojiMemoryGameView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let game = EmojiMemoryGame()
-        
-        EmojiMemoryGameView(game: game)
-            .preferredColorScheme(.dark)
-            .previewInterfaceOrientation(.landscapeLeft)
-        EmojiMemoryGameView(game: game)
+//        game.choose(game.cards.first!)
+        return EmojiMemoryGameView(game: game)
             .preferredColorScheme(.light)
             .previewInterfaceOrientation(.portrait)
     }

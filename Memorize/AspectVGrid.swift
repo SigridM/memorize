@@ -22,7 +22,7 @@ struct AspectVGrid<Item, ItemView>: View where ItemView: View, Item: Identifiabl
 
     init(items: [Item],
          aspectRatio: CGFloat,
-         content: @escaping (Item, CGFloat) -> ItemView) {
+         @ViewBuilder content: @escaping (Item, CGFloat) -> ItemView) {
         self.items = items
         self.aspectRatio = aspectRatio
         self.content = content
