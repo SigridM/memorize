@@ -52,10 +52,10 @@ Memorize is a Swift-powered card matching game developed as part of Stanford’s
 ---
 
 ## Screenshots
-
-<!-- Add your own screenshots here -->
-![Memorize Gameplay](screenshots/memorize-gameplay.png)
-![Theme Selection](screenshots/theme-selection.png)
+<img width="568" height="1084" alt="Screenshot 2025-11-19 at 9 17 00 AM" src="https://github.com/user-attachments/assets/bbbd5be3-f69d-4ee9-822e-8ee120691234" />
+<img width="568" height="1084" alt="Screenshot 2025-11-19 at 9 17 09 AM" src="https://github.com/user-attachments/assets/5775b8dd-001f-40e6-8824-bf595205c884" />
+<img width="568" height="1084" alt="Screenshot 2025-11-19 at 9 17 54 AM" src="https://github.com/user-attachments/assets/489ed493-4144-488d-9528-38c24544e260" />
+<img width="568" height="1084" alt="Screenshot 2025-11-19 at 9 18 38 AM" src="https://github.com/user-attachments/assets/0ac8932a-4ce6-4592-b7ff-5405ef0306b4" />
 
 ---
 
