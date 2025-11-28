@@ -7,7 +7,7 @@
 
 ## Overview
 
-Memorize is a Swift-powered card matching game developed as part of Stanford’s iOS course (Assignment 2). The app demonstrates modern iOS development practices including declarative UI with SwiftUI, state management, animations, and accessibility. The objective: match pairs of cards by memory in as few moves as possible.
+Memorize is a Swift-powered card matching game developed as part of Stanford’s iOS course. The app demonstrates modern iOS development practices including declarative UI with SwiftUI, state management, animations, and accessibility. The objective: match pairs of cards by memory in as few moves as possible.
 
 ---
 
